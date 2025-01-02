@@ -41,6 +41,9 @@ jobs:
             echo "repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})"
           } >> $GITHUB_ENV
 
+      - name: Grant execute permissions to gradlew
+        run: chmod +x ./gradlew
+
       - name: Build
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace
