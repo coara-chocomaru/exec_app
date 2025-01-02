@@ -44,9 +44,14 @@ jobs:
       - name: Grant execute permissions to gradlew
         run: chmod +x ./gradlew
 
+      - name: Print environment info
+        run: |
+          java -version
+          ./gradlew --version
+
       - name: Build
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace --info --offline
           cp -f app/build/outputs/apk/debug/app-debug.apk ${{ env.repo }}-${{ env.version }}.apk
 
       - name: Attest
