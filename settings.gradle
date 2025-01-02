@@ -14,5 +14,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "0p0"
+rootProject.name = "exec_app"
 include 'app'
