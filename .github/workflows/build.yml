@@ -47,12 +47,12 @@ jobs:
           echo "artifact_name=${sanitized_repo}-${sanitized_version}-${{ github.sha }}" >> $GITHUB_ENV
           # ファイル名のクリーンアップ
           sanitized_artifact_file=$(echo "${{ env.repo }}-${{ env.version }}.apk" | tr -d '\r\n')
-          cp -- app/build/outputs/apk/debug/app-debug.apk "${sanitized_artifact_file}" # -- を追加
           echo "artifact_file=${sanitized_artifact_file}" >> $GITHUB_ENV
 
       - name: Build
         run: |
           ./gradlew clean assembleDebug --no-daemon --stacktrace
+          cp -- app/build/outputs/apk/debug/app-debug.apk "${sanitized_artifact_file}"
 
       - name: Attest
         continue-on-error: true
