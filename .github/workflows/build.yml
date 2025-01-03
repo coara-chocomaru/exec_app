@@ -33,18 +33,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       - name: Set environments
         run: |
           echo "version=v$(grep versionName app/build.gradle | awk '{print $2}' | tr -d \")" >> $GITHUB_ENV
           echo "commit=$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_ENV
           echo "repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})" >> $GITHUB_ENV
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
       - name: Build
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew clean assembleDebug --no-daemon --stacktrace
           cp -f app/build/outputs/apk/debug/app-debug.apk ${{ env.repo }}-${{ env.version }}.apk
 
       - name: Attest
@@ -56,5 +56,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.repo }}(${{ env.version }}@${{ env.commit }})
+          name: ${{ replace(replace(replace(env.repo, '\r', ''), '\n', ''), ' ', '-') }}-${{ replace(replace(env.version, '\r', ''), '\n', '') }}-${{ github.sha }}
           path: ${{ env.repo }}-${{ env.version }}.apk
