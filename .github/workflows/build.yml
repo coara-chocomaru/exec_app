@@ -52,9 +52,15 @@ jobs:
       - name: Build
         run: |
           ./gradlew clean assembleDebug --no-daemon --stacktrace
-          # ファイルがあるか確認してからコピー
+          # ファイルが存在するか確認
           if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp -- app/build/outputs/apk/debug/app-debug.apk "${sanitized_artifact_file}"
+            # ファイル名の空チェック
+            if [ -n "${{ env.artifact_file }}" ]; then
+              cp -- app/build/outputs/apk/debug/app-debug.apk "${{ env.artifact_file }}"
+            else
+              echo "Error: artifact_file is empty"
+              exit 1
+            fi
           else
             echo "Error: app-debug.apk not found"
             exit 1
