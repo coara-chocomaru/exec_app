@@ -10,6 +10,11 @@ on:
       - '*.properties'
   pull_request:
   workflow_dispatch:
+    inputs:
+      custom_version:
+        description: 'Custom version for build'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -33,24 +38,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant Execution Permission
-        run: chmod +x ./gradlew
-
-      - name: Clear Gradle Cache
-        run: ./gradlew clean
-
       - name: Set environments
         run: |
-          {
-            echo "version=v$(grep versionName app/build.gradle | awk '{print $2}' | tr -d \")"
-            echo "commit=$(echo ${{ github.sha }} | cut -c-7)"
-            echo "repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})"
-          } >> $GITHUB_ENV
+          echo "version=v$(grep versionName app/build.gradle | awk '{print $2}' | tr -d \")" >> $GITHUB_ENV
+          echo "commit=$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_ENV
+          echo "repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})" >> $GITHUB_ENV
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            echo "version=${{ github.event.inputs.custom_version }}" >> $GITHUB_ENV
+          fi
 
-      - name: Build with Debug Logs
+      - name: Build
         run: |
-          ./gradlew wrapper --gradle-version 8.3
-          ./gradlew assembleDebug --no-daemon --stacktrace --debug
+          ./gradlew assembleDebug --no-daemon --stacktrace
           cp -f app/build/outputs/apk/debug/app-debug.apk ${{ env.repo }}-${{ env.version }}.apk
 
       - name: Attest
@@ -62,5 +61,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.repo }}(${{ env.version }}@${{ env.commit }})
+          name: ${{ env.repo }}-${{ env.version }}-${{ env.commit }}
           path: ${{ env.repo }}-${{ env.version }}.apk
