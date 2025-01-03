@@ -12,7 +12,9 @@
         android:theme="@style/Theme.AppCompat.Light"
         android:requestLegacyExternalStorage="true"> <!-- これを追加 -->
 
-        <activity android:name=".MainActivity">
+        <activity 
+            android:name=".MainActivity"
+            android:exported="true"> <!-- android:exported属性を追加 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
