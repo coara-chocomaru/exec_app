@@ -33,6 +33,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Clear Gradle Cache
+        run: ./gradlew clean
+
       - name: Set environments
         run: |
           {
@@ -41,12 +44,10 @@ jobs:
             echo "repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})"
           } >> $GITHUB_ENV
 
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x ./gradlew
-
-      - name: Build
+      - name: Build with Debug Logs
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew wrapper --gradle-version 8.3
+          ./gradlew assembleDebug --no-daemon --stacktrace --debug
           cp -f app/build/outputs/apk/debug/app-debug.apk ${{ env.repo }}-${{ env.version }}.apk
 
       - name: Attest
