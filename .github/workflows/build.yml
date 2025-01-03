@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       custom_version:
-        description: 'Custom version for build'
+        description: '8.12'
         required: false
         default: ''
 
