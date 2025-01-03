@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<relativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
+    <editText
         android:id="@+id/command_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter command" />
 
-    <Button
+    <button
         android:id="@+id/execute_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
         android:layout_below="@id/command_input"
         android:layout_marginTop="10dp"/>
 
-    <ScrollView
+    <scrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -25,12 +25,12 @@
         android:layout_marginTop="20dp"
         android:layout_alignParentBottom="true">
 
-        <TextView
+        <textView
             android:id="@+id/result_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Result will be displayed here"
             android:padding="10dp" />
-    </ScrollView>
+    </scrollView>
 
-</RelativeLayout>
+</relativeLayout>
