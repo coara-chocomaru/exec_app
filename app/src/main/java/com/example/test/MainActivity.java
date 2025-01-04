@@ -71,7 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
         // コマンド実行ボタンのリスナー
         executeButton.setOnClickListener(view -> {
-            String command = commandInput.getText().toString();
+            String command = commandInput.getText().toString().trim();
+
+            if (command.isEmpty() && selectedBinary == null) {
+                Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
+                return; // コマンドもバイナリもない場合は処理を中断
+            }
 
             if (selectedBinary != null && selectedBinary.exists()) {
                 if (!command.startsWith(selectedBinary.getAbsolutePath())) {
