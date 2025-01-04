@@ -10,16 +10,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.database.Cursor;
 import android.provider.OpenableColumns;
 
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
     private Process currentProcess; // 実行中のプロセス
     private File selectedBinary;    // 選択されたバイナリファイル
+    private ScheduledExecutorService timeoutExecutor; // タイムアウト用スレッド
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,13 +31,14 @@ public class MainActivity extends AppCompatActivity {
         EditText commandInput = findViewById(R.id.command_input);
         Button executeButton = findViewById(R.id.execute_button);
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
-        Button clearBinaryButton = findViewById(R.id.clear_binary_button); // バイナリ解除ボタン
+        Button clearBinaryButton = findViewById(R.id.clear_binary_button);
+        Button stopButton = findViewById(R.id.stop_button);
         TextView resultView = findViewById(R.id.result_view);
         ScrollView scrollView = findViewById(R.id.scroll_view);
 
         resultView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-        // ファイルピックアッパーのセットアップ
+        // ファイルピッカーのセットアップ
         ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -62,12 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
         // バイナリ解除ボタンのリスナー
         clearBinaryButton.setOnClickListener(view -> {
-            selectedBinary = null; // バイナリ選択を解除
-            Toast.makeText(
-                this,
-                "バイナリが解除されました。",
-                Toast.LENGTH_SHORT
-            ).show();
+            selectedBinary = null;
+            Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
         });
 
         // コマンド実行ボタンのリスナー
@@ -75,20 +74,22 @@ public class MainActivity extends AppCompatActivity {
             String command = commandInput.getText().toString();
 
             if (selectedBinary != null && selectedBinary.exists()) {
-                // バイナリが選択されている場合、そのパスをコマンドに追加
                 if (!command.startsWith(selectedBinary.getAbsolutePath())) {
                     command = selectedBinary.getAbsolutePath() + " " + command;
                 }
             } else {
-                // バイナリが選択されていない場合は通知を表示
-                Toast.makeText(
-                    this,
-                    "バイナリが選択されていません。コマンドをそのまま実行します。",
-                    Toast.LENGTH_SHORT
-                ).show();
+                Toast.makeText(this, "バイナリが選択されていません。コマンドをそのまま実行します。", Toast.LENGTH_SHORT).show();
             }
 
-            executeCommand(command, resultView); // コマンドを実行
+            executeCommand(command, resultView);
+        });
+
+        // 強制終了ボタンのリスナー
+        stopButton.setOnClickListener(view -> {
+            if (currentProcess != null && currentProcess.isAlive()) {
+                currentProcess.destroy();
+                resultView.append("INFO: コマンドが強制終了されました\n");
+            }
         });
     }
 
@@ -108,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 outputStream.write(buffer, 0, length);
             }
             destFile = new File(directory, getFileName(uri));
-            destFile.setExecutable(true); // 実行可能フラグを設定
+            destFile.setExecutable(true);
         } catch (Exception e) {
             Toast.makeText(this, "バイナリのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -135,40 +136,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void executeCommand(String command, TextView resultView) {
-        resultView.setText(""); // 出力リセット
+        resultView.setText("");
         try {
-            // currentProcessを実行
             currentProcess = Runtime.getRuntime().exec(command);
 
-            // 非同期タスクの実行
+            // タイムアウト用スレッドを開始
+            timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+            timeoutExecutor.schedule(() -> {
+                if (currentProcess.isAlive()) {
+                    currentProcess.destroy();
+                    runOnUiThread(() -> resultView.append("INFO: コマンドがタイムアウトにより強制終了されました\n"));
+                }
+            }, 30, TimeUnit.SECONDS); // 30秒でタイムアウト
+
             Executors.newSingleThreadExecutor().submit(() -> {
-                try (
-                    // try-with-resourcesでリソースを管理
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
-                    BufferedReader errorReader = new BufferedReader(new InputStreamReader(currentProcess.getErrorStream()))
-                ) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
+                     BufferedReader errorReader = new BufferedReader(new InputStreamReader(currentProcess.getErrorStream()))) {
                     StringBuilder output = new StringBuilder();
 
-                    // 標準出力の処理
                     processStream(reader, resultView, output, false);
-
-                    // 標準エラーの処理
                     processStream(errorReader, resultView, output, true);
-
-                    // ログファイルに保存
                     saveLogToFile(command, output.toString());
-
                 } catch (IOException e) {
-                    // 例外をキャッチしてエラーメッセージをUIスレッドで表示
                     runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
-                    e.printStackTrace(); // スタックトレースを表示
                 }
             });
 
         } catch (IOException e) {
-            // コマンドの実行エラーをキャッチ
             runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
-            e.printStackTrace();
         }
     }
 
@@ -177,8 +172,6 @@ public class MainActivity extends AppCompatActivity {
         while ((line = reader.readLine()) != null) {
             final String displayedLine = isError ? "ERROR: " + line : line;
             output.append(displayedLine).append("\n");
-
-            // UIスレッドでTextViewを更新
             runOnUiThread(() -> resultView.append(displayedLine + "\n"));
         }
     }
