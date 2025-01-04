@@ -1,27 +1,25 @@
 package com.example.test;
 
-import android.content.pm.PackageManager;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int STORAGE_PERMISSION_REQUEST_CODE = 1;  // リクエストコード
-    private int logIndex = 1;  // ログファイルの連番
+    private Process currentProcess; // 実行中のプロセス
+    private File selectedBinary;    // 選択されたバイナリファイル
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,93 +28,176 @@ public class MainActivity extends AppCompatActivity {
 
         EditText commandInput = findViewById(R.id.command_input);
         Button executeButton = findViewById(R.id.execute_button);
+        Button pickBinaryButton = findViewById(R.id.pick_binary_button);
+        Button clearBinaryButton = findViewById(R.id.clear_binary_button); // バイナリ解除ボタン
         TextView resultView = findViewById(R.id.result_view);
-        ScrollView scrollView = findViewById(R.id.scroll_view);  // ScrollViewのIDを設定
+        ScrollView scrollView = findViewById(R.id.scroll_view);
 
-        // TextViewをスクロール可能にするための設定
         resultView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-        // ストレージ権限があるか確認
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            // 権限がない場合、リクエスト
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    STORAGE_PERMISSION_REQUEST_CODE);
-        }
+        // ファイルピックアッパーのセットアップ
+        ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null) {
+                        selectedBinary = copyFileToInternalStorage(uri);
+                        Toast.makeText(
+                            this,
+                            "バイナリが選択されました: " + selectedBinary.getAbsolutePath(),
+                            Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+            });
 
+        // バイナリ選択ボタンのリスナー
+        pickBinaryButton.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            filePickerLauncher.launch(intent);
+        });
+
+        // バイナリ解除ボタンのリスナー
+        clearBinaryButton.setOnClickListener(view -> {
+            selectedBinary = null; // バイナリ選択を解除
+            Toast.makeText(
+                this,
+                "バイナリが解除されました。",
+                Toast.LENGTH_SHORT
+            ).show();
+        });
+
+        // コマンド実行ボタンのリスナー
         executeButton.setOnClickListener(view -> {
             String command = commandInput.getText().toString();
-            try {
-                Process process = Runtime.getRuntime().exec(command);
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream())
-                );
-                StringBuilder output = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");  // 改行を追加
+
+            if (selectedBinary != null && selectedBinary.exists()) {
+                // バイナリが選択されている場合、そのパスをコマンドに追加
+                if (!command.startsWith(selectedBinary.getAbsolutePath())) {
+                    command = selectedBinary.getAbsolutePath() + " " + command;
                 }
-
-                BufferedReader errorReader = new BufferedReader(
-                        new InputStreamReader(process.getErrorStream())
-                );
-                while ((line = errorReader.readLine()) != null) {
-                    output.append("ERROR: ").append(line).append("\n");  // 改行を追加
-                }
-
-                // 結果をTextViewに表示
-                resultView.setText(output.toString());
-
-                // ログファイルの保存
-                saveLogToFile(output.toString());
-
-            } catch (Exception e) {
-                resultView.setText("Error: " + e.getMessage());
-                Toast.makeText(this, "エラー: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            } else {
+                // バイナリが選択されていない場合は通知を表示
+                Toast.makeText(
+                    this,
+                    "バイナリが選択されていません。コマンドをそのまま実行します。",
+                    Toast.LENGTH_SHORT
+                ).show();
             }
+
+            executeCommand(command, resultView); // コマンドを実行
         });
     }
 
-    // ストレージ権限のリクエスト結果の処理
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "ストレージ権限が許可されました", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "ストレージ権限が拒否されました", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void saveLogToFile(String logContent) {
-        // /sdcard/command/ フォルダの代わりにアプリ専用のディレクトリに保存
-        File directory = new File(getExternalFilesDir(null), "command");
+    private File copyFileToInternalStorage(Uri uri) {
+        File directory = new File(getFilesDir(), "binaries");
         if (!directory.exists()) {
             directory.mkdirs();
         }
 
-        // ログファイルを連番で作成
-        File logFile = new File(directory, "log" + logIndex + ".txt");
-        try {
-            // ログ内容をファイルに書き込む
-            FileOutputStream fos = new FileOutputStream(logFile);
-            OutputStreamWriter writer = new OutputStreamWriter(fos);
-            writer.write(logContent);
-            writer.close();
-
-            // ファイル番号をインクリメント
-            logIndex++;
-
-            // 保存完了メッセージ
-            Toast.makeText(this, "ログが保存されました: " + logFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-
+        File destFile = null;
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(
+                     new File(directory, getFileName(uri)))) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+            destFile = new File(directory, getFileName(uri));
+            destFile.setExecutable(true); // 実行可能フラグを設定
         } catch (Exception e) {
+            Toast.makeText(this, "バイナリのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+        return destFile;
+    }
+
+    private String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
+    private void executeCommand(String command, TextView resultView) {
+        resultView.setText(""); // 出力リセット
+        try {
+            // currentProcessを実行
+            currentProcess = Runtime.getRuntime().exec(command);
+
+            // 非同期タスクの実行
+            Executors.newSingleThreadExecutor().submit(() -> {
+                try (
+                    // try-with-resourcesでリソースを管理
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
+                    BufferedReader errorReader = new BufferedReader(new InputStreamReader(currentProcess.getErrorStream()))
+                ) {
+                    StringBuilder output = new StringBuilder();
+
+                    // 標準出力の処理
+                    processStream(reader, resultView, output, false);
+
+                    // 標準エラーの処理
+                    processStream(errorReader, resultView, output, true);
+
+                    // ログファイルに保存
+                    saveLogToFile(command, output.toString());
+
+                } catch (IOException e) {
+                    // 例外をキャッチしてエラーメッセージをUIスレッドで表示
+                    runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
+                    e.printStackTrace(); // スタックトレースを表示
+                }
+            });
+
+        } catch (IOException e) {
+            // コマンドの実行エラーをキャッチ
+            runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
             e.printStackTrace();
-            Toast.makeText(this, "ログ保存中にエラーが発生しました", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void processStream(BufferedReader reader, TextView resultView, StringBuilder output, boolean isError) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            final String displayedLine = isError ? "ERROR: " + line : line;
+            output.append(displayedLine).append("\n");
+
+            // UIスレッドでTextViewを更新
+            runOnUiThread(() -> resultView.append(displayedLine + "\n"));
+        }
+    }
+
+    private void saveLogToFile(String command, String logContent) {
+        File directory = new File(getExternalFilesDir(null), "command_logs");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fileName = command.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timeStamp + ".txt";
+        File logFile = new File(directory, fileName);
+
+        try (FileOutputStream fos = new FileOutputStream(logFile);
+             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
+            writer.write(logContent);
+        } catch (Exception e) {
+            Toast.makeText(this, "ログ保存中にエラー: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }
