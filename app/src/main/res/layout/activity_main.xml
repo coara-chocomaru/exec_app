@@ -40,6 +40,16 @@
         android:layout_marginTop="10dp"
         android:layout_alignParentStart="true" />
 
+    <!-- 強制終了ボタン -->
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:layout_below="@id/execute_button"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentEnd="true" />
+
     <!-- スクロール可能な結果表示 -->
     <ScrollView
         android:id="@+id/scroll_view"
