@@ -1,4 +1,0 @@
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- アプリ専用の外部ストレージディレクトリ -->
-    <external-path name="external_files" path="." />
-</paths>
