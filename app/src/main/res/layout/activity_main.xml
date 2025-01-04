@@ -1,23 +1,47 @@
-<?xml version="1.0" encoding="utf-8"?>
-<relativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <editText
+    <!-- コマンド入力フィールド -->
+    <EditText
         android:id="@+id/command_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter command" />
 
-    <button
+    <!-- バイナリ選択ボタン -->
+    <Button
+        android:id="@+id/pick_binary_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pick Binary"
+        android:layout_below="@id/command_input"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true" />
+
+    <!-- バイナリ解除ボタン -->
+    <Button
+        android:id="@+id/clear_binary_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear Binary"
+        android:layout_below="@id/command_input"
+        android:layout_toEndOf="@id/pick_binary_button"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp" />
+
+    <!-- 実行ボタン -->
+    <Button
         android:id="@+id/execute_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Execute"
-        android:layout_below="@id/command_input"
-        android:layout_marginTop="10dp"/>
+        android:layout_below="@id/pick_binary_button"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true" />
 
-    <scrollView
+    <!-- スクロール可能な結果表示 -->
+    <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -25,12 +49,11 @@
         android:layout_marginTop="20dp"
         android:layout_alignParentBottom="true">
 
-        <textView
+        <TextView
             android:id="@+id/result_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Result will be displayed here"
             android:padding="10dp" />
-    </scrollView>
-
-</relativeLayout>
+    </ScrollView>
+</RelativeLayout>
