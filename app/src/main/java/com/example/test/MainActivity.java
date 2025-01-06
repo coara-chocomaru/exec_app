@@ -1,14 +1,19 @@
 package com.example.test;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.widget.*;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import android.database.Cursor;
-import android.provider.OpenableColumns;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -22,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private Process currentProcess; // 実行中のプロセス
     private File selectedBinary;    // 選択されたバイナリファイル
     private ScheduledExecutorService timeoutExecutor; // タイムアウト用スレッド
+
+    private static final int PERMISSION_REQUEST_CODE = 1001; // 権限リクエストのコード
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,22 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
         resultView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-        // ファイルピッカーのセットアップ
-        ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Uri uri = result.getData().getData();
-                    if (uri != null) {
-                        selectedBinary = copyFileToInternalStorage(uri);
-                        Toast.makeText(
-                            this,
-                            "バイナリが選択されました: " + selectedBinary.getAbsolutePath(),
-                            Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                }
-            });
+        // 権限確認とリクエスト
+        checkPermissions();
 
         // バイナリ選択ボタンのリスナー
         pickBinaryButton.setOnClickListener(view -> {
@@ -97,6 +90,52 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void checkPermissions() {
+        // 権限確認
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            // 権限がない場合、リクエスト
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0) {
+                for (int i = 0; i < permissions.length; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, permissions[i] + " 権限が許可されました", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, permissions[i] + " 権限が拒否されました", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    }
+
+    private ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                Uri uri = result.getData().getData();
+                if (uri != null) {
+                    selectedBinary = copyFileToInternalStorage(uri);
+                    Toast.makeText(
+                        this,
+                        "バイナリが選択されました: " + selectedBinary.getAbsolutePath(),
+                        Toast.LENGTH_SHORT
+                    ).show();
+                }
+            }
+        });
 
     private File copyFileToInternalStorage(Uri uri) {
         File directory = new File(getFilesDir(), "binaries");
