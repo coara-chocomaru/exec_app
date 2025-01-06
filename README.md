@@ -3,3 +3,15 @@ execの動作を確かめたり権限の確認をしたりで使ってます。
 毎回ログが保存されますので
 後で見返すのが個人的に楽です。
 権限は低いので制限されてます。
+
+
+exec単体の権限ではlogcatやscreencapなどの多くのコマンドが動作しません。
+
+reboot機能も使えません
+システムアプリ化をして
+android.permission.REBOOT`（システムアプリのみ使用可能）
+android.permission.DEVICE_POWER
+なとが必要です
+またはroot権限でbusyboxやmagiskなどを利用する必要があります。
+
+
