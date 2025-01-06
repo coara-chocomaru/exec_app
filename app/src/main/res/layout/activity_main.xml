@@ -1,13 +1,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <!-- コマンド入力フィールド -->
     <EditText
         android:id="@+id/command_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter command" />
+        android:hint="Enter command"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="8dp"
+        android:inputType="text"
+        android:importantForAccessibility="yes" 
+        android:contentDescription="Command input field" />
 
     <!-- バイナリ選択ボタン -->
     <Button
@@ -16,8 +23,11 @@
         android:layout_height="wrap_content"
         android:text="Pick Binary"
         android:layout_below="@id/command_input"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:importantForAccessibility="yes"
+        android:contentDescription="Pick binary file button" />
 
     <!-- バイナリ解除ボタン -->
     <Button
@@ -27,8 +37,9 @@
         android:text="Clear Binary"
         android:layout_below="@id/command_input"
         android:layout_toEndOf="@id/pick_binary_button"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp" />
+        android:layout_marginBottom="8dp"
+        android:importantForAccessibility="yes"
+        android:contentDescription="Clear selected binary button" />
 
     <!-- 実行ボタン -->
     <Button
@@ -37,8 +48,10 @@
         android:layout_height="wrap_content"
         android:text="Execute"
         android:layout_below="@id/pick_binary_button"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="8dp"
+        android:importantForAccessibility="yes"
+        android:contentDescription="Execute command button" />
 
     <!-- 強制終了ボタン -->
     <Button
@@ -47,8 +60,10 @@
         android:layout_height="wrap_content"
         android:text="Stop"
         android:layout_below="@id/execute_button"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="8dp"
+        android:importantForAccessibility="yes"
+        android:contentDescription="Stop command execution button" />
 
     <!-- スクロール可能な結果表示 -->
     <ScrollView
@@ -56,14 +71,19 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_below="@id/execute_button"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="8dp">
 
         <TextView
             android:id="@+id/result_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Result will be displayed here"
-            android:padding="10dp" />
+            android:padding="10dp"
+            android:background="@android:color/white"
+            android:scrollbars="vertical"
+            android:importantForAccessibility="yes"
+            android:contentDescription="Text view displaying result of command" />
     </ScrollView>
+
 </RelativeLayout>
