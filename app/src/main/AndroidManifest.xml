@@ -1,16 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.test">
 
-    <!-- ストレージの権限を追加 -->
+    <!-- 外部ストレージへの読み書き権限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <!-- Android 10 (API level 29)以降のScoped Storageを回避するための設定 -->
     <application
         android:allowBackup="true"
         android:label="ExecApp"
         android:theme="@style/Theme.AppCompat.Light"
-        android:requestLegacyExternalStorage="true">
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true"
+        android:manageSpaceActivity="true"
+        tools:targetApi="q">
 
         <!-- FileProvider の設定 -->
         <provider
@@ -23,12 +26,13 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- アプリのメインアクティビティ -->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+    </application>
 </manifest>
