@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.test">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 外部ストレージへの読み書き権限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
