@@ -1,20 +1,17 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 外部ストレージへの読み書き権限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:label="ExecApp"
-        android:theme="@style/Theme.AppCompat.Light"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true"
-        android:manageSpaceActivity="true"
-        tools:targetApi="q">
+        android:theme="@android:style/Theme.Holo.Light"
+        android:requestLegacyExternalStorage="true">
 
-        <!-- FileProvider の設定 -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -25,10 +22,10 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- アプリのメインアクティビティ -->
-        <activity android:name=".MainActivity"
-                  android:exported="true"
-                  android:configChanges="keyboardHidden|orientation|screenSize">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
