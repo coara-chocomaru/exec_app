@@ -1,0 +1,71 @@
+name: APK Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: chmod +x
+        run: chmod +x ./gradlew
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Get version, commit, repo info
+        run: |
+          version=$(grep versionName app/build.gradle | awk -F\" '{print $2}')
+          commit=$(echo ${{ github.sha }} | cut -c-7)
+          repo=$(echo ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/})
+          timestamp=$(date +'%Y%m%d%H%M%S')
+          echo "version=$version"
+          echo "commit=$commit"
+          echo "repo=$repo"
+          echo "timestamp=$timestamp"
+          echo "ZIP_NAME=${repo}-v${version}-${commit}-${timestamp}.zip" >> $GITHUB_ENV
+        id: version-info
+
+      - name: Build APK
+        run: ./gradlew assembleDebug 
+
+      - name: Verify APK location
+        run: |
+          ls app/build/outputs/apk/debug/ 
+
+      - name: Create ZIP file with APK
+        run: |
+          if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "APK found, creating ZIP..."
+            ZIP_NAME="${{ env.ZIP_NAME }}"
+            zip -j "$ZIP_NAME" app/build/outputs/apk/debug/app-debug.apk 
+          else
+            echo "APK file not found, exiting."
+            exit 1
+          fi
+
+      - name: Upload the generated ZIP file as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ env.ZIP_NAME }}"
+          path: ${{ env.ZIP_NAME }}
