@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // レイアウト内のビューを取得
+        // UI要素の取得
         EditText commandInput = findViewById(R.id.command_input);
         Button executeButton = findViewById(R.id.execute_button);
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
@@ -45,34 +45,32 @@ public class MainActivity extends Activity {
         Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
-        // 権限確認
+        // 権限の確認
         checkPermissions();
 
-        // バイナリ選択ボタン
+        // バイナリ選択ボタンの動作
         pickBinaryButton.setOnClickListener(view -> launchFilePicker());
 
-        // バイナリ解除ボタン
+        // バイナリ解除ボタンの動作
         clearBinaryButton.setOnClickListener(view -> {
             selectedBinary = null;
             Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
         });
 
-        // コマンド実行ボタン
+        // コマンド実行ボタンの動作
         executeButton.setOnClickListener(view -> {
             String command = commandInput.getText().toString().trim();
             if (command.isEmpty() && selectedBinary == null) {
                 Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
                 return;
             }
-
             if (selectedBinary != null && selectedBinary.exists()) {
                 command = selectedBinary.getAbsolutePath() + " " + command;
             }
-
             executeCommand(command, resultView);
         });
 
-        // 強制停止ボタン
+        // 強制停止ボタンの動作
         stopButton.setOnClickListener(view -> {
             if (currentProcess != null && currentProcess.isAlive()) {
                 currentProcess.destroy();
@@ -82,16 +80,17 @@ public class MainActivity extends Activity {
             }
         });
 
-        // キーボード開閉ボタン
+        // キーボード開閉ボタンの動作
         keyboardButton.setOnClickListener(view -> {
-        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-            commandInput.requestFocus();
-        }
-    });
-}
-        
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                commandInput.requestFocus();
+            }
+        });
+    }
+
+    // 権限の確認メソッド
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -117,6 +116,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    // ファイル選択画面を起動するメソッド
     private void launchFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
