@@ -35,15 +35,14 @@ jobs:
             echo "timestamp=$(TZ='Asia/Tokyo' date +'%Y%m%d%H%M%S')"
             echo "name=${repo}-${version}-${commit}-${timestamp}"
           } >> $GITHUB_ENV
-          echo "name=${{ env.repo }}-${{ env.version }}-${{ env.commit }}-${{ env.timestamp }}" >> $GITHUB_ENV
 
       - name: Show set variables
         run: |
+          echo "name=${{ env.repo }}-${{ env.version }}-${{ env.commit }}-${{ env.timestamp }}" >> $GITHUB_ENV
           echo -e "version=${{ env.version }}"
           echo -e "commit=${{ env.commit }}"
           echo -e "repo=${{ env.repo }}"
           echo -e "timestamp=${{ env.timestamp }}"
-          echo -e "name=${{ env.name }}"
 
       - name: Build
         run: |
