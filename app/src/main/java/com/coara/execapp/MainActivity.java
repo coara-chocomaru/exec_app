@@ -11,6 +11,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.database.Cursor;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -27,9 +29,9 @@ public class MainActivity extends Activity {
     private Process currentProcess;
     private File selectedBinary;
     private ScheduledExecutorService timeoutExecutor;
+    private ActivityResultLauncher<Intent> filePickerLauncher;
 
     private static final int PERMISSION_REQUEST_CODE = 1001;
-    private static final int FILE_PICKER_REQUEST_CODE = 1002;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +48,29 @@ public class MainActivity extends Activity {
 
         checkPermissions();
 
-        pickBinaryButton.setOnClickListener(view -> launchFilePicker());
+    
+        filePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null) {
+                        selectedBinary = copyFileToInternalStorage(uri);
+                        if (selectedBinary != null && setFileExecutable(selectedBinary)) {
+                            Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+
+        pickBinaryButton.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            filePickerLauncher.launch(intent);
+        });
 
         clearBinaryButton.setOnClickListener(view -> {
             selectedBinary = null;
@@ -107,31 +131,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void launchFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, FILE_PICKER_REQUEST_CODE);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            if (uri != null) {
-                selectedBinary = copyFileToInternalStorage(uri);
-                if (selectedBinary != null && setFileExecutable(selectedBinary)) {
-                    Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-    }
-
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false); 
+        return file.setExecutable(true, false);
     }
 
     private File copyFileToInternalStorage(Uri uri) {
@@ -153,7 +154,11 @@ public class MainActivity extends Activity {
                     outputStream.write(buffer, 0, length);
                 }
             }
-            return destFile;
+            if (setFileExecutable(destFile)) {
+                return destFile;
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return null;
