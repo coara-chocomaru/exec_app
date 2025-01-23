@@ -11,7 +11,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.database.Cursor;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -23,7 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private Process currentProcess;
     private File selectedBinary;
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
+        
         checkPermissions();
 
         pickBinaryButton.setOnClickListener(view -> launchFilePicker());
@@ -84,9 +84,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
     private void checkPermissions() {
+        
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -108,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    
     private void launchFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -132,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false); // 実行権限を付与
+        return file.setExecutable(true, false); 
     }
 
     private File copyFileToInternalStorage(Uri uri) {
@@ -154,14 +159,7 @@ public class MainActivity extends AppCompatActivity {
                     outputStream.write(buffer, 0, length);
                 }
             }
-
-            if (destFile.setExecutable(true, false)) {
-                return destFile;
-            } else {
-                Toast.makeText(this, "実行権限付与に失敗しました", Toast.LENGTH_SHORT).show();
-                return null;
-            }
-
+            return destFile;
         } catch (IOException e) {
             Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return null;
