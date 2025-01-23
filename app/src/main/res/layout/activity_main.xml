@@ -12,9 +12,7 @@
         android:padding="8dp"
         android:background="@android:drawable/edit_text"
         android:layout_marginBottom="8dp"
-        android:inputType="text"
-        android:importantForAccessibility="yes" 
-        android:contentDescription="Command input field" />
+        android:inputType="text" />
 
     <!-- バイナリ選択ボタン -->
     <Button
@@ -25,9 +23,7 @@
         android:layout_below="@id/command_input"
         android:layout_alignParentStart="true"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:importantForAccessibility="yes"
-        android:contentDescription="Pick binary file button" />
+        android:layout_marginBottom="8dp" />
 
     <!-- バイナリ解除ボタン -->
     <Button
@@ -37,29 +33,26 @@
         android:text="Clear Binary"
         android:layout_below="@id/command_input"
         android:layout_toEndOf="@id/pick_binary_button"
-        android:layout_marginBottom="8dp"
-        android:importantForAccessibility="yes"
-        android:contentDescription="Clear selected binary button" />
+        android:layout_marginBottom="8dp" />
 
     <Button
-        android:id="@+id/toggle_keyboard_button"
+        android:id="@+id/keyboard_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="keybord"
+        android:text="Keyboard"
         android:layout_below="@id/clear_binary_button"
-        android:layout_marginTop="10dp" />
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="8dp" />
 
-    <!-- 強制終了ボタン -->
+    <!-- 強制停止ボタン -->
     <Button
         android:id="@+id/stop_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Stop"
-        android:layout_below="@id/clear_binary_button"
+        android:layout_below="@id/keyboard_button"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp"
-        android:importantForAccessibility="yes"
-        android:contentDescription="Stop command execution button" />
+        android:layout_marginBottom="8dp" />
 
     <!-- 実行ボタン -->
     <Button
@@ -69,11 +62,9 @@
         android:text="Execute"
         android:layout_below="@id/stop_button"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp"
-        android:importantForAccessibility="yes"
-        android:contentDescription="Execute command button" />
+        android:layout_marginBottom="8dp" />
 
-    <!-- スクロール可能な結果表示 -->
+    <!-- 結果表示用スクロールビュー -->
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
@@ -88,9 +79,7 @@
             android:text="Result will be displayed here"
             android:padding="10dp"
             android:background="@android:color/white"
-            android:scrollbars="vertical"
-            android:importantForAccessibility="yes"
-            android:contentDescription="Text view displaying result of command" />
+            android:scrollbars="vertical" />
     </ScrollView>
 
 </RelativeLayout>
