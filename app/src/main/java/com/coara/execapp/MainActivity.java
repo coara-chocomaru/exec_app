@@ -81,17 +81,14 @@ public class MainActivity extends Activity {
 
         // キーボード開閉ボタン
         keyboardButton.setOnClickListener(view -> {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                if (imm.isAcceptingText()) {
-                    imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
-                    Toast.makeText(this, "キーボードを閉じました。", Toast.LENGTH_SHORT).show();
-                } else {
-                    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                    Toast.makeText(this, "キーボードを開きました。", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+    if (imm.isAcceptingText()) {
+        imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
+    } else {
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
+});
+
     }
 
     private void checkPermissions() {
