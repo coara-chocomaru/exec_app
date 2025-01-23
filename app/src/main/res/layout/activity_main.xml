@@ -39,7 +39,7 @@
         android:layout_marginBottom="8dp" 
         android:layout_weight="1"/>
 
-    <!-- 小さめのSTOP ボタン -->
+    <!-- 小さめのStop ボタン -->
     <Button
         android:id="@+id/stop_button"
         android:layout_width="wrap_content"
@@ -48,7 +48,7 @@
         android:layout_below="@id/pick_binary_button"
         android:layout_alignParentStart="true"
         android:layout_marginBottom="8dp"
-        android:textSize="12sp" /> <!-- フォントサイズを小さく -->
+        android:textSize="12sp" />
 
     <!-- Execute ボタン -->
     <Button
@@ -76,7 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/keyboard_button"
-        android:layout_marginTop="8dp"> <!-- 上に少し余裕を持たせる -->
+        android:layout_marginTop="8dp">
 
         <TextView
             android:id="@+id/result_view"
