@@ -1,6 +1,7 @@
 package com.coara.execapp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -8,13 +9,12 @@ import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import android.database.Cursor;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity; // 変更
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import android.database.Cursor;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -24,14 +24,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity { // ActivityからAppCompatActivityに変更
 
-    private Process currentProcess;
-    private File selectedBinary;
-    private ScheduledExecutorService timeoutExecutor;
-    private ActivityResultLauncher<Intent> filePickerLauncher;
-
+    private Process currentProcess; // 実行中のプロセス
+    private File selectedBinary;    // 選択されたバイナリファイル
+    private ScheduledExecutorService timeoutExecutor; // タイムアウト用スレッド
     private static final int PERMISSION_REQUEST_CODE = 1001;
+    private ActivityResultLauncher<Intent> filePickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +42,11 @@ public class MainActivity extends AppCompatActivity {
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
         Button clearBinaryButton = findViewById(R.id.clear_binary_button);
         Button stopButton = findViewById(R.id.stop_button);
-        Button keyboardButton = findViewById(R.id.keyboard_button);
+        Button keyboardButton = findViewById(R.id.keyboard_button); // 新規追加
         TextView resultView = findViewById(R.id.result_view);
+        ScrollView scrollView = findViewById(R.id.scroll_view);
+
+        resultView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
         checkPermissions();
 
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+        // バイナリ選択ボタンのリスナー
         pickBinaryButton.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.setType("*/*");
@@ -72,23 +75,33 @@ public class MainActivity extends AppCompatActivity {
             filePickerLauncher.launch(intent);
         });
 
+        // バイナリ解除ボタンのリスナー
         clearBinaryButton.setOnClickListener(view -> {
             selectedBinary = null;
             Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
         });
 
+        // コマンド実行ボタンのリスナー
         executeButton.setOnClickListener(view -> {
             String command = commandInput.getText().toString().trim();
+
             if (command.isEmpty() && selectedBinary == null) {
                 Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
-                return;
+                return; // コマンドもバイナリもない場合は処理を中断
             }
+
             if (selectedBinary != null && selectedBinary.exists()) {
-                command = selectedBinary.getAbsolutePath() + " " + command;
+                if (!command.startsWith(selectedBinary.getAbsolutePath())) {
+                    command = selectedBinary.getAbsolutePath() + " " + command;
+                }
+            } else {
+                Toast.makeText(this, "バイナリが選択されていません。コマンドをそのまま実行します。", Toast.LENGTH_SHORT).show();
             }
+
             executeCommand(command, resultView);
         });
 
+        // 強制終了ボタンのリスナー
         stopButton.setOnClickListener(view -> {
             if (currentProcess != null && currentProcess.isAlive()) {
                 currentProcess.destroy();
@@ -98,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // キーボード開閉ボタンのリスナー (新規追加)
         keyboardButton.setOnClickListener(view -> {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             if (imm != null) {
@@ -137,37 +151,33 @@ public class MainActivity extends AppCompatActivity {
 
     private File copyFileToInternalStorage(Uri uri) {
         File directory = new File(getFilesDir(), "binaries");
-        if (!directory.exists() && !directory.mkdirs()) {
-            Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
-            return null;
-        }
-
-        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
-            if (inputStream == null) return null;
-
-            String fileName = getFileName(uri);
-            File destFile = new File(directory, fileName);
-            try (OutputStream outputStream = new FileOutputStream(destFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, length);
-                }
-            }
-            if (setFileExecutable(destFile)) {
-                return destFile;
-            } else {
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
                 return null;
             }
-        } catch (IOException e) {
-            Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            return null;
         }
+
+        File destFile = null;
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(
+                     new File(directory, getFileName(uri)))) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+            destFile = new File(directory, getFileName(uri));
+            destFile.setExecutable(true);
+        } catch (Exception e) {
+            Toast.makeText(this, "バイナリのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+        return destFile;
     }
 
     private String getFileName(Uri uri) {
         String result = null;
-        if ("content".equals(uri.getScheme())) {
+        if (uri.getScheme().equals("content")) {
             try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
@@ -189,42 +199,39 @@ public class MainActivity extends AppCompatActivity {
         try {
             currentProcess = Runtime.getRuntime().exec(command);
 
+            // タイムアウト用スレッドを開始
             timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
             timeoutExecutor.schedule(() -> {
                 if (currentProcess.isAlive()) {
                     currentProcess.destroy();
-                    runOnUiThread(() -> resultView.append("INFO: タイムアウトにより強制終了されました\n"));
+                    runOnUiThread(() -> resultView.append("INFO: コマンドがタイムアウトにより強制終了されました\n"));
                 }
-            }, 30, TimeUnit.SECONDS);
+            }, 30, TimeUnit.SECONDS); // 30秒でタイムアウト
 
             Executors.newSingleThreadExecutor().submit(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
                      BufferedReader errorReader = new BufferedReader(new InputStreamReader(currentProcess.getErrorStream()))) {
-
                     StringBuilder output = new StringBuilder();
-                    String line;
 
-                    while ((line = reader.readLine()) != null) {
-                        output.append(line).append("\n");
-                        final String finalLine = line;
-                        runOnUiThread(() -> resultView.append(finalLine + "\n"));
-                    }
-
-                    while ((line = errorReader.readLine()) != null) {
-                        output.append("ERROR: ").append(line).append("\n");
-                        final String finalErrorLine = line;
-                        runOnUiThread(() -> resultView.append("ERROR: " + finalErrorLine + "\n"));
-                    }
-
+                    processStream(reader, resultView, output, false);
+                    processStream(errorReader, resultView, output, true);
                     saveLogToFile(command, output.toString());
-
                 } catch (IOException e) {
                     runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
                 }
             });
 
         } catch (IOException e) {
-            resultView.setText("ERROR: " + e.getMessage());
+            runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
+        }
+    }
+
+    private void processStream(BufferedReader reader, TextView resultView, StringBuilder output, boolean isError) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            final String displayedLine = isError ? "ERROR: " + line : line;
+            output.append(displayedLine).append("\n");
+            runOnUiThread(() -> resultView.append(displayedLine + "\n"));
         }
     }
 
