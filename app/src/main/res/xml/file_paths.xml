@@ -1,3 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="external_files" path="." />
+    <internal-paths>
+        <path name="internal_files" path="." />
+    </internal-paths>
+
+    <external-paths>
+        <path name="external_files" path="." />
+    </external-paths>
+    
+    <external-path name="external_app_dir" path="Android/data/com.coara.execapp/files/" />
 </paths>
