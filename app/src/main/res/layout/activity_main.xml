@@ -79,7 +79,8 @@
             android:text="Result will be displayed here"
             android:padding="10dp"
             android:background="@android:color/white"
-            android:scrollbars="vertical" />
+            android:scrollbars="vertical"
+            android:textIsSelectable="true" />
     </ScrollView>
 
 </RelativeLayout>
