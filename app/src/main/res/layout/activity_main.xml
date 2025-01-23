@@ -4,65 +4,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- 結果表示用スクロールビュー -->
-    <ScrollView
-        android:id="@+id/scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1">
-
-        <TextView
-            android:id="@+id/result_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:padding="10dp"
-            android:scrollbars="vertical"
-            android:text="Result will be displayed here"
-            android:textIsSelectable="true" />
-    </ScrollView>
-
-    <!-- 強制停止ボタン -->
-    <Button
-        android:id="@+id/stop_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Stop" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <!-- バイナリ選択ボタン -->
-
-        <Button
-            android:id="@+id/pick_binary_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:text="Pick Binary" />
-
-        <!-- バイナリ解除ボタン -->
-
-        <Button
-            android:id="@+id/clear_binary_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Clear Binary" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/keyboard_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Keyboard" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -91,5 +32,66 @@
             android:layout_marginBottom="8dp"
             android:text="Execute" />
     </LinearLayout>
+
+    <!-- キーボード開閉ボタン -->
+
+    <Button
+        android:id="@+id/keyboard_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Keyboard" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- バイナリ選択ボタン -->
+
+        <Button
+            android:id="@+id/pick_binary_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="Pick Binary" />
+
+        <!-- バイナリ解除ボタン -->
+
+        <Button
+            android:id="@+id/clear_binary_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Clear Binary" />
+    </LinearLayout>
+
+    <!-- 強制停止ボタン -->
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Stop" />
+
+    <!-- 結果表示用スクロールビュー -->
+    <ScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/result_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:padding="10dp"
+            android:scrollbars="vertical"
+            android:text="Result will be displayed here"
+            android:textIsSelectable="true" />
+    </ScrollView>
 
 </LinearLayout>
