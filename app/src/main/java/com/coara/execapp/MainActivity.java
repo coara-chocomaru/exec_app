@@ -1,7 +1,6 @@
 package com.coara.execapp;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -13,9 +12,9 @@ import android.database.Cursor;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.activity.ComponentActivity;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -25,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends ComponentActivity {
+public class MainActivity extends AppCompatActivity {
 
     private Process currentProcess;
     private File selectedBinary;
