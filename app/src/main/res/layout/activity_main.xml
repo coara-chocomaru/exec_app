@@ -1,86 +1,95 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="16dp">
-
-    <!-- コマンド入力フィールド -->
-    <EditText
-        android:id="@+id/command_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter command"
-        android:padding="8dp"
-        android:background="@android:drawable/edit_text"
-        android:layout_marginBottom="8dp"
-        android:inputType="text" />
-
-    <!-- バイナリ選択ボタン -->
-    <Button
-        android:id="@+id/pick_binary_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pick Binary"
-        android:layout_below="@id/command_input"
-        android:layout_alignParentStart="true"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- バイナリ解除ボタン -->
-    <Button
-        android:id="@+id/clear_binary_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Clear Binary"
-        android:layout_below="@id/command_input"
-        android:layout_toEndOf="@id/pick_binary_button"
-        android:layout_marginBottom="8dp" />
-
-    <Button
-        android:id="@+id/keyboard_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Keyboard"
-        android:layout_below="@id/clear_binary_button"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp" />
-
-    <!-- 強制停止ボタン -->
-    <Button
-        android:id="@+id/stop_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:layout_below="@id/keyboard_button"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp" />
-
-    <!-- 実行ボタン -->
-    <Button
-        android:id="@+id/execute_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Execute"
-        android:layout_below="@id/stop_button"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp" />
 
     <!-- 結果表示用スクロールビュー -->
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/execute_button"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        android:layout_weight="1">
 
         <TextView
             android:id="@+id/result_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Result will be displayed here"
-            android:padding="10dp"
             android:background="@android:color/white"
+            android:padding="10dp"
             android:scrollbars="vertical"
+            android:text="Result will be displayed here"
             android:textIsSelectable="true" />
     </ScrollView>
 
-</RelativeLayout>
+    <!-- 強制停止ボタン -->
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Stop" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- バイナリ選択ボタン -->
+
+        <Button
+            android:id="@+id/pick_binary_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="Pick Binary" />
+
+        <!-- バイナリ解除ボタン -->
+
+        <Button
+            android:id="@+id/clear_binary_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Clear Binary" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/keyboard_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Keyboard" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <!-- コマンド入力フィールド -->
+
+        <EditText
+            android:id="@+id/command_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:background="@android:drawable/edit_text"
+            android:hint="Enter command"
+            android:inputType="text"
+            android:padding="8dp" />
+
+        <!-- 実行ボタン -->
+
+        <Button
+            android:id="@+id/execute_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Execute" />
+    </LinearLayout>
+
+</LinearLayout>
