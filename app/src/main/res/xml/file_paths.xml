@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <internal-paths>
-        <path name="internal_files" path="." />
-    </internal-paths>
 
-    <external-paths>
-        <path name="external_files" path="." />
-    </external-paths>
-    
-    <external-path name="external_app_dir" path="Android/data/com.coara.execapp/files/" />
+    <!-- アプリ内部のファイルをアクセス可能にする -->
+    <files-path
+        name="internal_files"
+        path="."/>
+
+    <!-- 外部ストレージへのアクセスを許可 -->
+    <external-path
+        name="external_files"
+        path="."/>
+
 </paths>
