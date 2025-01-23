@@ -1,7 +1,6 @@
 package com.coara.execapp;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -11,7 +10,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity; // 変更
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.database.Cursor;
@@ -24,27 +23,37 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity { // ActivityからAppCompatActivityに変更
+public class MainActivity extends AppCompatActivity {
 
-    private Process currentProcess; // 実行中のプロセス
-    private File selectedBinary;    // 選択されたバイナリファイル
-    private ScheduledExecutorService timeoutExecutor; // タイムアウト用スレッド
+    private Process currentProcess; 
+    private File selectedBinary;    
+    private ScheduledExecutorService timeoutExecutor; 
     private static final int PERMISSION_REQUEST_CODE = 1001;
     private ActivityResultLauncher<Intent> filePickerLauncher;
+    private boolean permissionsGranted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        
         EditText commandInput = findViewById(R.id.command_input);
         Button executeButton = findViewById(R.id.execute_button);
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
         Button clearBinaryButton = findViewById(R.id.clear_binary_button);
         Button stopButton = findViewById(R.id.stop_button);
-        Button keyboardButton = findViewById(R.id.keyboard_button); // 新規追加
+        Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
         ScrollView scrollView = findViewById(R.id.scroll_view);
+
+        // UI要素がnullでないことを確認
+        if (commandInput == null || executeButton == null || pickBinaryButton == null || 
+            clearBinaryButton == null || stopButton == null || keyboardButton == null || 
+            resultView == null || scrollView == null) {
+            Toast.makeText(this, "レイアウトに問題があります。", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         resultView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
@@ -57,51 +66,59 @@ public class MainActivity extends AppCompatActivity { // ActivityからAppCompat
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri uri = result.getData().getData();
                     if (uri != null) {
-                        selectedBinary = copyFileToInternalStorage(uri);
-                        if (selectedBinary != null && setFileExecutable(selectedBinary)) {
-                            Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                        if (permissionsGranted) {
+                            selectedBinary = copyFileToInternalStorage(uri);
+                            if (selectedBinary != null && setFileExecutable(selectedBinary)) {
+                                Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "必要なパーミッションが許可されていません。", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
             });
 
-        // バイナリ選択ボタンのリスナー
+        // ボタンクリックリスナーの設定
+        setupButtonListeners(commandInput, executeButton, pickBinaryButton, clearBinaryButton, stopButton, keyboardButton, resultView);
+    }
+
+    private void setupButtonListeners(EditText commandInput, Button executeButton, Button pickBinaryButton, 
+                                      Button clearBinaryButton, Button stopButton, Button keyboardButton, TextView resultView) {
         pickBinaryButton.setOnClickListener(view -> {
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            filePickerLauncher.launch(intent);
+            if (permissionsGranted) {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.setType("*/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                filePickerLauncher.launch(intent);
+            } else {
+                Toast.makeText(this, "必要なパーミッションが許可されていません。", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        // バイナリ解除ボタンのリスナー
         clearBinaryButton.setOnClickListener(view -> {
             selectedBinary = null;
             Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
         });
 
-        // コマンド実行ボタンのリスナー
         executeButton.setOnClickListener(view -> {
-            String command = commandInput.getText().toString().trim();
+            if (permissionsGranted) {
+                String command = commandInput.getText().toString().trim();
+                if (command.isEmpty() && selectedBinary == null) {
+                    Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-            if (command.isEmpty() && selectedBinary == null) {
-                Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
-                return; // コマンドもバイナリもない場合は処理を中断
-            }
-
-            if (selectedBinary != null && selectedBinary.exists()) {
-                if (!command.startsWith(selectedBinary.getAbsolutePath())) {
+                if (selectedBinary != null && selectedBinary.exists()) {
                     command = selectedBinary.getAbsolutePath() + " " + command;
                 }
+                executeCommand(command, resultView);
             } else {
-                Toast.makeText(this, "バイナリが選択されていません。コマンドをそのまま実行します。", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "必要なパーミッションが許可されていません。", Toast.LENGTH_SHORT).show();
             }
-
-            executeCommand(command, resultView);
         });
 
-        // 強制終了ボタンのリスナー
         stopButton.setOnClickListener(view -> {
             if (currentProcess != null && currentProcess.isAlive()) {
                 currentProcess.destroy();
@@ -111,7 +128,6 @@ public class MainActivity extends AppCompatActivity { // ActivityからAppCompat
             }
         });
 
-        // キーボード開閉ボタンのリスナー (新規追加)
         keyboardButton.setOnClickListener(view -> {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             if (imm != null) {
@@ -122,12 +138,18 @@ public class MainActivity extends AppCompatActivity { // ActivityからAppCompat
     }
 
     private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-            }, PERMISSION_REQUEST_CODE);
+        String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        permissionsGranted = true;
+
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsGranted = false;
+                break;
+            }
+        }
+
+        if (!permissionsGranted) {
+            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
         }
     }
 
@@ -135,12 +157,17 @@ public class MainActivity extends AppCompatActivity { // ActivityからAppCompat
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, permissions[i] + " 権限が許可されました", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, permissions[i] + " 権限が拒否されました", Toast.LENGTH_SHORT).show();
+            permissionsGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    permissionsGranted = false;
+                    break;
                 }
+            }
+            if (permissionsGranted) {
+                Toast.makeText(this, "必要なパーミッションが許可されました。", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "一部のパーミッションが拒否されました。アプリの全機能が利用できない場合があります。", Toast.LENGTH_LONG).show();
             }
         }
     }
