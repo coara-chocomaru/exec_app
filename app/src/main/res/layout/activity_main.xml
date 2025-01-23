@@ -41,6 +41,14 @@
         android:importantForAccessibility="yes"
         android:contentDescription="Clear selected binary button" />
 
+    <Button
+        android:id="@+id/toggle_keyboard_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="keybord"
+        android:layout_below="@id/clear_binary_button"
+        android:layout_marginTop="10dp" />
+
     <!-- 強制終了ボタン -->
     <Button
         android:id="@+id/stop_button"
