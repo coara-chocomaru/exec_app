@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false); 
+        return file.setExecutable(true, false); // 実行権限を付与
     }
 
     private File copyFileToInternalStorage(Uri uri) {
@@ -154,7 +154,7 @@ public class MainActivity extends Activity {
                 }
             }
 
-            
+            // 実行権限を付与
             if (destFile.setExecutable(true, false)) {
                 return destFile;
             } else {
