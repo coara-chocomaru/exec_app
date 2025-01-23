@@ -86,7 +86,6 @@ public class MainActivity extends Activity {
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -121,7 +120,7 @@ public class MainActivity extends Activity {
         if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
             if (uri != null) {
-                selectedBinary = copyFileToCache(uri);
+                selectedBinary = copyFileToInternalStorage(uri);
                 if (selectedBinary != null && setFileExecutable(selectedBinary)) {
                     Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
                 } else {
@@ -132,11 +131,11 @@ public class MainActivity extends Activity {
     }
 
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false);
+        return file.setExecutable(true, false); // 実行権限を付与
     }
 
-    private File copyFileToCache(Uri uri) {
-        File directory = new File(getCacheDir(), "binaries");
+    private File copyFileToInternalStorage(Uri uri) {
+        File directory = new File(getFilesDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
             Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
             return null;
@@ -154,6 +153,7 @@ public class MainActivity extends Activity {
                     outputStream.write(buffer, 0, length);
                 }
             }
+
             return destFile;
         } catch (IOException e) {
             Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
