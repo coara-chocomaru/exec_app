@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
         Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
+        
         checkPermissions();
 
         pickBinaryButton.setOnClickListener(view -> launchFilePicker());
@@ -83,10 +84,13 @@ public class MainActivity extends Activity {
         });
     }
 
+
     private void checkPermissions() {
+        
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
+            
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -108,6 +112,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    
     private void launchFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -136,9 +141,9 @@ public class MainActivity extends Activity {
     }
 
     private File copyFileToCache(Uri uri) {
-        File cacheDir = new File(getCacheDir(), "binaries");
-        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-            Toast.makeText(this, "キャッシュディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
+        File directory = new File(getCacheDir(), "binaries"); 
+        if (!directory.exists() && !directory.mkdirs()) {
+            Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
             return null;
         }
 
@@ -146,7 +151,7 @@ public class MainActivity extends Activity {
             if (inputStream == null) return null;
 
             String fileName = getFileName(uri);
-            File destFile = new File(cacheDir, fileName);
+            File destFile = new File(directory, fileName);
             try (OutputStream outputStream = new FileOutputStream(destFile)) {
                 byte[] buffer = new byte[1024];
                 int length;
