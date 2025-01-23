@@ -131,11 +131,11 @@ public class MainActivity extends Activity {
     }
 
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false); 
+        return file.setExecutable(true, false);
     }
 
     private File copyFileToInternalStorage(Uri uri) {
-        
+    
         File directory = new File(getFilesDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
             Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
@@ -155,7 +155,7 @@ public class MainActivity extends Activity {
                 }
             }
 
-            
+    
             if (!destFile.setExecutable(true, false)) {
                 Toast.makeText(this, "実行権限の付与に失敗しました", Toast.LENGTH_SHORT).show();
                 return null;
