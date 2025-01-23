@@ -154,7 +154,7 @@ public class MainActivity extends Activity {
                 }
             }
 
-            // 実行権限を付与
+            
             if (destFile.setExecutable(true, false)) {
                 return destFile;
             } else {
