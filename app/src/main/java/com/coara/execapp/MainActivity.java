@@ -44,7 +44,6 @@ public class MainActivity extends Activity {
         Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
-        
         checkPermissions();
 
         pickBinaryButton.setOnClickListener(view -> launchFilePicker());
@@ -84,13 +83,10 @@ public class MainActivity extends Activity {
         });
     }
 
-
     private void checkPermissions() {
-        
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
-            
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -112,7 +108,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    
     private void launchFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -137,11 +132,11 @@ public class MainActivity extends Activity {
     }
 
     private boolean setFileExecutable(File file) {
-        return file.setExecutable(true, false); 
+        return file.setExecutable(true, false);
     }
 
     private File copyFileToCache(Uri uri) {
-        File directory = new File(getCacheDir(), "binaries"); 
+        File directory = new File(getCacheDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
             Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
             return null;
