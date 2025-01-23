@@ -154,7 +154,6 @@ public class MainActivity extends Activity {
                 }
             }
 
-            
             if (destFile.setExecutable(true, false)) {
                 return destFile;
             } else {
