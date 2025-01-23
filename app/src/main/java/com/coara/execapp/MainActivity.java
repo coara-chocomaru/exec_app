@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.database.Cursor;
 
@@ -38,6 +39,7 @@ public class MainActivity extends Activity {
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
         Button clearBinaryButton = findViewById(R.id.clear_binary_button);
         Button stopButton = findViewById(R.id.stop_button);
+        Button keyboardButton = findViewById(R.id.keyboard_button); // キーボード開閉ボタン
         TextView resultView = findViewById(R.id.result_view);
 
         // 権限確認
@@ -74,6 +76,18 @@ public class MainActivity extends Activity {
                 resultView.append("INFO: コマンドが強制終了されました\n");
             } else {
                 Toast.makeText(this, "実行中のプロセスはありません。", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // キーボード開閉ボタン
+        keyboardButton.setOnClickListener(view -> {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm.isAcceptingText()) {
+                imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
+                Toast.makeText(this, "キーボードを閉じました。", Toast.LENGTH_SHORT).show();
+            } else {
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                Toast.makeText(this, "キーボードを開きました。", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -116,7 +130,11 @@ public class MainActivity extends Activity {
             Uri uri = data.getData();
             if (uri != null) {
                 selectedBinary = copyFileToInternalStorage(uri);
-                Toast.makeText(this, "バイナリが選択されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                if (selectedBinary != null && selectedBinary.setExecutable(true)) { // 実行権限を付与
+                    Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -216,7 +234,7 @@ public class MainActivity extends Activity {
             directory.mkdirs();
         }
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String fileName = command.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timeStamp + ".txt";
         File logFile = new File(directory, fileName);
 
