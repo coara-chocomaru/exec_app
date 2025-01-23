@@ -11,6 +11,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.database.Cursor;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,7 +26,7 @@ public class MainActivity extends Activity {
 
     private Process currentProcess;
     private File selectedBinary;
-    private ScheduledExecutorService timeoutExecutor; // タイムアウト用スレッド
+    private ScheduledExecutorService timeoutExecutor;
 
     private static final int PERMISSION_REQUEST_CODE = 1001;
     private static final int FILE_PICKER_REQUEST_CODE = 1002;
@@ -39,7 +42,7 @@ public class MainActivity extends Activity {
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
         Button clearBinaryButton = findViewById(R.id.clear_binary_button);
         Button stopButton = findViewById(R.id.stop_button);
-        Button keyboardButton = findViewById(R.id.keyboard_button); // キーボード開閉ボタン
+        Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
         // 権限確認
@@ -81,20 +84,20 @@ public class MainActivity extends Activity {
 
         // キーボード開閉ボタン
         keyboardButton.setOnClickListener(view -> {
-    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-    if (imm.isAcceptingText()) {
-        imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
-    } else {
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-    }
-});
-
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null && imm.isAcceptingText()) {
+                imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
+            } else {
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            }
+        });
     }
 
     private void checkPermissions() {
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, PERMISSION_REQUEST_CODE);
@@ -129,7 +132,7 @@ public class MainActivity extends Activity {
             Uri uri = data.getData();
             if (uri != null) {
                 selectedBinary = copyFileToInternalStorage(uri);
-                if (selectedBinary != null && selectedBinary.setExecutable(true)) { // 実行権限を付与
+                if (selectedBinary != null && selectedBinary.setExecutable(true)) {
                     Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
