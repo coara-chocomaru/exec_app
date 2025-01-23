@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ComponentActivity {
 
     private Process currentProcess;
     private File selectedBinary;
