@@ -36,7 +36,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        
         EditText commandInput = findViewById(R.id.command_input);
         Button executeButton = findViewById(R.id.execute_button);
         Button pickBinaryButton = findViewById(R.id.pick_binary_button);
@@ -45,13 +44,11 @@ public class MainActivity extends Activity {
         Button keyboardButton = findViewById(R.id.keyboard_button);
         TextView resultView = findViewById(R.id.result_view);
 
-        // 権限の確認
+        
         checkPermissions();
 
-        
         pickBinaryButton.setOnClickListener(view -> launchFilePicker());
 
-        
         clearBinaryButton.setOnClickListener(view -> {
             selectedBinary = null;
             Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
@@ -69,7 +66,6 @@ public class MainActivity extends Activity {
             executeCommand(command, resultView);
         });
 
-    
         stopButton.setOnClickListener(view -> {
             if (currentProcess != null && currentProcess.isAlive()) {
                 currentProcess.destroy();
@@ -79,7 +75,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        
         keyboardButton.setOnClickListener(view -> {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             if (imm != null) {
@@ -89,11 +84,13 @@ public class MainActivity extends Activity {
         });
     }
 
-    // 権限の確認メソッド
+
     private void checkPermissions() {
+        
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
+            
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -115,7 +112,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ファイル選択
+    
     private void launchFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
@@ -130,13 +127,17 @@ public class MainActivity extends Activity {
             Uri uri = data.getData();
             if (uri != null) {
                 selectedBinary = copyFileToInternalStorage(uri);
-                if (selectedBinary != null && selectedBinary.setExecutable(true)) {
+                if (selectedBinary != null && setFileExecutable(selectedBinary)) {
                     Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
                 }
             }
         }
+    }
+
+    private boolean setFileExecutable(File file) {
+        return file.setExecutable(true, false); 
     }
 
     private File copyFileToInternalStorage(Uri uri) {
