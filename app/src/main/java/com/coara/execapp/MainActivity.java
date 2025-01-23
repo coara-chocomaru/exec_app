@@ -135,9 +135,14 @@ public class MainActivity extends Activity {
     }
 
     private File copyFileToInternalStorage(Uri uri) {
-    
-        File directory = new File(getFilesDir(), "binaries");
+        File directory = new File(getApplicationContext().getFilesDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
+            Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+
+        File destinationDir = new File("/data/data/com.coara.execapp/files");
+        if (!destinationDir.exists() && !destinationDir.mkdirs()) {
             Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
             return null;
         }
@@ -146,19 +151,13 @@ public class MainActivity extends Activity {
             if (inputStream == null) return null;
 
             String fileName = getFileName(uri);
-            File destFile = new File(directory, fileName);
+            File destFile = new File(destinationDir, fileName);
             try (OutputStream outputStream = new FileOutputStream(destFile)) {
                 byte[] buffer = new byte[1024];
                 int length;
                 while ((length = inputStream.read(buffer)) > 0) {
                     outputStream.write(buffer, 0, length);
                 }
-            }
-
-    
-            if (!destFile.setExecutable(true, false)) {
-                Toast.makeText(this, "実行権限の付与に失敗しました", Toast.LENGTH_SHORT).show();
-                return null;
             }
 
             return destFile;
