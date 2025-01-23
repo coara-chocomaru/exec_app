@@ -49,7 +49,7 @@ public class MainActivity extends ComponentActivity {
 
         checkPermissions();
 
-    
+        // ファイルピッカーのセットアップ
         filePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
