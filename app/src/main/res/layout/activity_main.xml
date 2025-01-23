@@ -14,47 +14,43 @@
         android:layout_marginBottom="8dp"
         android:inputType="text" />
 
-    <!-- バイナリ選択ボタン -->
+    <!-- Pick Binary ボタン -->
     <Button
         android:id="@+id/pick_binary_button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Pick Binary"
         android:layout_below="@id/command_input"
         android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/clear_binary_button"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp" 
+        android:layout_weight="1"/>
 
-    <!-- バイナリ解除ボタン -->
+    <!-- Clear Binary ボタン -->
     <Button
         android:id="@+id/clear_binary_button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Clear Binary"
         android:layout_below="@id/command_input"
         android:layout_toEndOf="@id/pick_binary_button"
-        android:layout_marginBottom="8dp" />
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="8dp" 
+        android:layout_weight="1"/>
 
-    <Button
-        android:id="@+id/keyboard_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Keyboard"
-        android:layout_below="@id/clear_binary_button"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp" />
-
-    <!-- 強制停止ボタン -->
+    <!-- 小さめのSTOP ボタン -->
     <Button
         android:id="@+id/stop_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Stop"
-        android:layout_below="@id/keyboard_button"
+        android:text="STOP"
+        android:layout_below="@id/pick_binary_button"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"
+        android:textSize="12sp" /> <!-- フォントサイズを小さく -->
 
-    <!-- 実行ボタン -->
+    <!-- Execute ボタン -->
     <Button
         android:id="@+id/execute_button"
         android:layout_width="wrap_content"
@@ -64,13 +60,23 @@
         android:layout_alignParentStart="true"
         android:layout_marginBottom="8dp" />
 
+    <!-- Keyboard ボタン -->
+    <Button
+        android:id="@+id/keyboard_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Keyboard"
+        android:layout_below="@id/execute_button"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="8dp" />
+
     <!-- 結果表示用スクロールビュー -->
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/execute_button"
-        android:layout_marginTop="8dp">
+        android:layout_below="@id/keyboard_button"
+        android:layout_marginTop="8dp"> <!-- 上に少し余裕を持たせる -->
 
         <TextView
             android:id="@+id/result_view"
