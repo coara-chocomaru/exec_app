@@ -11,6 +11,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import android.database.Cursor;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private Process currentProcess;
     private File selectedBinary;
@@ -135,7 +136,7 @@ public class MainActivity extends Activity {
     }
 
     private File copyFileToInternalStorage(Uri uri) {
-        File directory = new File("/data/data/com.coara.execapp/files");
+        File directory = new File(getFilesDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
             Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
             return null;
