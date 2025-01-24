@@ -11,7 +11,7 @@ android {
         minSdkVersion 21 //変更NG
         targetSdkVersion 24 //変更NG
         versionCode 2
-        versionName "2.2"
+        versionName "2.3"
         multiDexEnabled true
     }
 
