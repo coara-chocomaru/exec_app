@@ -6,7 +6,7 @@ android {
     compileSdk = 35
     namespace = 'com.coara.execapp'
 
-    defaultConfigs {
+    defaultConfig {
         minSdk = 21
         targetSdk = 24
         versionCode = 2
