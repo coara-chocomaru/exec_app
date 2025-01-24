@@ -1,250 +1,246 @@
-package com.coara.execapp;
+package com.coara.grepmd5app;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.OpenableColumns;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.*;
 import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
 
-    private Process currentProcess;
-    private File selectedBinary;
-    private ScheduledExecutorService timeoutExecutor;
-
-    private static final int PERMISSION_REQUEST_CODE = 1001;
-    private static final int FILE_PICKER_REQUEST_CODE = 1002;
+    private static final int PICK_FILE_REQUEST = 1;
+    private static final int PERMISSION_REQUEST_CODE = 100;
+    private File selectedFile;
+    private EditText grepInput;
+    private TextView resultTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // レイアウト内のビューを取得
-        EditText commandInput = findViewById(R.id.command_input);
-        Button executeButton = findViewById(R.id.execute_button);
-        Button pickBinaryButton = findViewById(R.id.pick_binary_button);
-        Button clearBinaryButton = findViewById(R.id.clear_binary_button);
-        Button stopButton = findViewById(R.id.stop_button);
-        Button keyboardButton = findViewById(R.id.keyboard_button);
-        TextView resultView = findViewById(R.id.result_view);
+        Button selectFileButton = findViewById(R.id.selectFileButton);
+        Button grepButton = findViewById(R.id.grepButton);
+        Button md5Button = findViewById(R.id.md5Button);
+        grepInput = findViewById(R.id.grepInput);
+        resultTextView = findViewById(R.id.resultTextView);
 
-        // 権限確認
-        checkPermissions();
-
-        // バイナリ選択ボタン
-        pickBinaryButton.setOnClickListener(view -> launchFilePicker());
-
-        // バイナリ解除ボタン
-        clearBinaryButton.setOnClickListener(view -> {
-            selectedBinary = null;
-            Toast.makeText(this, "バイナリが解除されました。", Toast.LENGTH_SHORT).show();
-        });
-
-        // コマンド実行ボタン
-        executeButton.setOnClickListener(view -> {
-            String command = commandInput.getText().toString().trim();
-            if (command.isEmpty() && selectedBinary == null) {
-                Toast.makeText(this, "コマンドまたはバイナリを指定してください。", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (selectedBinary != null && selectedBinary.exists()) {
-                command = selectedBinary.getAbsolutePath() + " " + command;
-            }
-
-            executeCommand(command, resultView);
-        });
-
-        // 強制停止ボタン
-        stopButton.setOnClickListener(view -> {
-            if (currentProcess != null && currentProcess.isAlive()) {
-                currentProcess.destroy();
-                resultView.append("INFO: コマンドが強制終了されました\n");
-            } else {
-                Toast.makeText(this, "実行中のプロセスはありません。", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // キーボード開閉ボタン
-        keyboardButton.setOnClickListener(view -> {
-        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-            commandInput.requestFocus();
-        }
-    });
-}
         
-    private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-            }, PERMISSION_REQUEST_CODE);
+        if (!checkPermissions()) {
+            requestPermissions();
         }
+
+        
+        selectFileButton.setOnClickListener(v -> openFilePicker());
+        grepButton.setOnClickListener(v -> executeGrep());
+        md5Button.setOnClickListener(v -> checkMd5());
     }
 
+    
+    private boolean checkPermissions() {
+        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+   
+    private void requestPermissions() {
+        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+    }
+
+    
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, permissions[i] + " 権限が許可されました", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, permissions[i] + " 権限が拒否されました", Toast.LENGTH_SHORT).show();
-                }
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "ストレージ権限が許可されました。", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "権限が拒否されました。アプリの機能が制限されます。", Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    private void launchFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, FILE_PICKER_REQUEST_CODE);
+    private void openFilePicker() {
+        if (checkPermissions()) {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            startActivityForResult(intent, PICK_FILE_REQUEST);
+        } else {
+            Toast.makeText(this, "権限がありません。ファイルを選択できません。", Toast.LENGTH_SHORT).show();
+        }
     }
 
+   
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            if (uri != null) {
-                selectedBinary = copyFileToInternalStorage(uri);
-                if (selectedBinary != null && selectedBinary.setExecutable(true)) {
-                    Toast.makeText(this, "バイナリが選択され、実行権限が付与されました: " + selectedBinary.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "バイナリ選択または実行権限付与に失敗しました。", Toast.LENGTH_SHORT).show();
+        if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null) {
+            try {
+                Uri selectedFileUri = data.getData();
+                String fileName = getFileName(selectedFileUri);
+
+                if (fileName == null) {
+                    Toast.makeText(this, "ファイル名が取得できませんでした。", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                File copiedFile = copyFileToAppStorage(selectedFileUri, fileName);
+                selectedFile = copiedFile;
+                Toast.makeText(this, "ファイルがコピーされました。", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    private File copyFileToInternalStorage(Uri uri) {
-        File directory = new File(getFilesDir(), "binaries");
-        if (!directory.exists() && !directory.mkdirs()) {
-            Toast.makeText(this, "ディレクトリ作成に失敗しました。", Toast.LENGTH_SHORT).show();
-            return null;
-        }
-
-        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
-            if (inputStream == null) return null;
-
-            String fileName = getFileName(uri);
-            File destFile = new File(directory, fileName);
-            try (OutputStream outputStream = new FileOutputStream(destFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, length);
-                }
-            }
-            return destFile;
-        } catch (IOException e) {
-            Toast.makeText(this, "ファイルのコピーに失敗しました: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            return null;
-        }
-    }
-
+   
     private String getFileName(Uri uri) {
-        String result = null;
-        if ("content".equals(uri.getScheme())) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+        String[] projection = {MediaStore.Images.Media.DISPLAY_NAME};
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME));
                 }
+            } finally {
+                cursor.close();
             }
         }
-        if (result == null) {
-            result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
-            }
-        }
-        return result;
+        return null;
     }
 
-    private void executeCommand(String command, TextView resultView) {
-        resultView.setText("");
-        try {
-            currentProcess = Runtime.getRuntime().exec(command);
+  
+    private File copyFileToAppStorage(Uri fileUri, String fileName) throws IOException {
+        InputStream inputStream = getContentResolver().openInputStream(fileUri);
+        File copiedFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName);
 
-            timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
-            timeoutExecutor.schedule(() -> {
-                if (currentProcess.isAlive()) {
-                    currentProcess.destroy();
-                    runOnUiThread(() -> resultView.append("INFO: タイムアウトにより強制終了されました\n"));
+        try (FileOutputStream outputStream = new FileOutputStream(copiedFile)) {
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+        }
+        if (inputStream != null) inputStream.close();
+        return copiedFile;
+    }
+
+  
+    private void executeGrep() {
+        if (selectedFile == null || grepInput.getText().toString().isEmpty()) {
+            resultTextView.setText("ファイルとキーワードを選択してください。");
+            return;
+        }
+        String keyword = grepInput.getText().toString();
+        new GrepTask().execute(selectedFile, keyword);
+    }
+
+    private class GrepTask extends AsyncTask<Object, Void, String> {
+        @Override
+        protected String doInBackground(Object... params) {
+            File file = (File) params[0];
+            String keyword = (String) params[1];
+            return grepFile(file, keyword);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            resultTextView.setText(result);
+            saveLog("grep_log", result);
+        }
+    }
+
+    private String grepFile(File file, String keyword) {
+        StringBuilder result = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            Pattern pattern = Pattern.compile(keyword, Pattern.CASE_INSENSITIVE);
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    result.append(line).append("\n");
                 }
-            }, 30, TimeUnit.SECONDS);
-
-            Executors.newSingleThreadExecutor().submit(() -> {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
-                     BufferedReader errorReader = new BufferedReader(new InputStreamReader(currentProcess.getErrorStream()))) {
-
-                    StringBuilder output = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        output.append(line).append("\n");
-                        final String finalLine = line;
-                        runOnUiThread(() -> resultView.append(finalLine + "\n"));
-                    }
-
-                    while ((line = errorReader.readLine()) != null) {
-                        output.append("ERROR: ").append(line).append("\n");
-                        final String finalErrorLine = line;
-                        runOnUiThread(() -> resultView.append("ERROR: " + finalErrorLine + "\n"));
-                    }
-
-                    saveLogToFile(command, output.toString());
-
-                } catch (IOException e) {
-                    runOnUiThread(() -> resultView.append("ERROR: " + e.getMessage() + "\n"));
-                }
-            });
-
+            }
         } catch (IOException e) {
-            resultView.setText("ERROR: " + e.getMessage());
+            result.append("エラー: ").append(e.getMessage());
+        }
+        return result.toString();
+    }
+
+    private void checkMd5() {
+        if (selectedFile == null) {
+            resultTextView.setText("ファイルを選択してください。");
+            return;
+        }
+        new Md5Task().execute(selectedFile);
+    }
+
+    private class Md5Task extends AsyncTask<File, Void, String> {
+        @Override
+        protected String doInBackground(File... files) {
+            return getMd5Checksum(files[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String md5) {
+            resultTextView.setText("MD5: " + md5);
+            saveLog("md5sum_log", md5);
         }
     }
 
-    private void saveLogToFile(String command, String logContent) {
-        File directory = new File(getExternalFilesDir(null), "command_logs");
-        if (!directory.exists()) {
-            directory.mkdirs();
+    private String getMd5Checksum(File file) {
+        if (!file.exists() || !file.isFile()) {
+            return "エラー: ファイルが見つかりません。";
         }
-
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String fileName = command.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timeStamp + ".txt";
-        File logFile = new File(directory, fileName);
-
-        try (FileOutputStream fos = new FileOutputStream(logFile);
-             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
-            writer.write(logContent);
-            runOnUiThread(() -> Toast.makeText(this, "ログが保存されました: " + logFile.getAbsolutePath(), Toast.LENGTH_LONG).show());
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            FileInputStream fis = new FileInputStream(file);
+            byte[] byteArray = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(byteArray)) != -1) {
+                digest.update(byteArray, 0, bytesRead);
+            }
+            byte[] md5Bytes = digest.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : md5Bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
         } catch (Exception e) {
-            runOnUiThread(() -> Toast.makeText(this, "ログ保存中にエラー: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            return "エラー: " + e.getMessage();
+        }
+    }
+
+    private void saveLog(String logType, String content) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File logFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), logType + "_" + timestamp + ".txt");
+
+        try (FileWriter writer = new FileWriter(logFile, true)) {
+            writer.write(content + "\n");
+        } catch (IOException e) {
+            Log.e("MainActivity", "ログ保存エラー", e);
         }
     }
 }
