@@ -10,6 +10,7 @@
         android:label="ExecApp"
         android:icon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Holo.Light"
+        android:manageSpaceActivity="true"
         android:requestLegacyExternalStorage="true">
 
         <provider
