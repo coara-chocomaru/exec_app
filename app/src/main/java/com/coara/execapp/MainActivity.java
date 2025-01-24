@@ -84,15 +84,14 @@ public class MainActivity extends Activity {
 
         // キーボード開閉ボタン
         keyboardButton.setOnClickListener(view -> {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null && imm.isAcceptingText()) {
-                imm.hideSoftInputFromWindow(commandInput.getWindowToken(), 0);
-            } else {
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-            }
-        });
-    }
-
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            commandInput.requestFocus();
+        }
+    });
+}
+        
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

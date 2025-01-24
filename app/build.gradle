@@ -6,9 +6,9 @@ android {
     compileSdk = 35
     namespace = 'com.coara.execapp'
 
-    defaultConfig {
-        minSdk = 24
-        targetSdk = 34
+    defaultConfigs {
+        minSdk = 21
+        targetSdk = 24
         versionCode = 2
         versionName = "2.1"
         multiDexEnabled = true
@@ -44,6 +44,10 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE'
+    }
+
+    lintOptions {
+        disable 'ExpiredTargetSdkVersion'
     }
 }
 
