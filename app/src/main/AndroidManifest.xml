@@ -7,11 +7,20 @@
 
     <application
         android:allowBackup="true"
-        android:label="ExecApp"
         android:icon="@drawable/ic_launcher"
-        android:theme="@android:style/Theme.Holo.Light"
-        android:manageSpaceActivity="true"
-        android:requestLegacyExternalStorage="true">
+        android:label="ExecApp"
+        android:requestLegacyExternalStorage="true"
+        android:theme="@android:style/Theme.Holo.Light">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -22,16 +31,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:configChanges="keyboardHidden|orientation|screenSize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
     </application>
 </manifest>

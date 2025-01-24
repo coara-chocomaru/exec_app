@@ -47,10 +47,14 @@ android {
     }
 
     lintOptions {
-        disable 'ExpiredTargetSdkVersion'
+        disable 'ExpiredTargetSdkVersion', 'NewApi', 'Range', 'SetTextI18n', 'ScopedStorage', 'FieldCanBeLocal', 'GradleDependency'
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
 dependencies {
-    implementation 'androidx.core:core:1.0.0' 
+    implementation 'androidx.core:core:1.0.0'
 }

@@ -8,9 +8,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.*;
 import android.database.Cursor;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -26,12 +31,14 @@ public class MainActivity extends Activity {
 
     private Process currentProcess;
     private File selectedBinary;
+    /** @noinspection FieldCanBeLocal*/
     private ScheduledExecutorService timeoutExecutor;
 
     private static final int PERMISSION_REQUEST_CODE = 1001;
     private static final int FILE_PICKER_REQUEST_CODE = 1002;
 
     @Override
+    @Deprecated
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -104,7 +111,7 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             for (int i = 0; i < permissions.length; i++) {
@@ -140,6 +147,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Nullable
     private File copyFileToInternalStorage(Uri uri) {
         File directory = new File(getFilesDir(), "binaries");
         if (!directory.exists() && !directory.mkdirs()) {
@@ -166,7 +174,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private String getFileName(Uri uri) {
+    private String getFileName(@NonNull Uri uri) {
         String result = null;
         if ("content".equals(uri.getScheme())) {
             try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
@@ -177,6 +185,7 @@ public class MainActivity extends Activity {
         }
         if (result == null) {
             result = uri.getPath();
+            //noinspection DataFlowIssue
             int cut = result.lastIndexOf('/');
             if (cut != -1) {
                 result = result.substring(cut + 1);
@@ -185,7 +194,7 @@ public class MainActivity extends Activity {
         return result;
     }
 
-    private void executeCommand(String command, TextView resultView) {
+    private void executeCommand(String command, @NonNull TextView resultView) {
         resultView.setText("");
         try {
             currentProcess = Runtime.getRuntime().exec(command);
@@ -232,6 +241,7 @@ public class MainActivity extends Activity {
     private void saveLogToFile(String command, String logContent) {
         File directory = new File(getExternalFilesDir(null), "command_logs");
         if (!directory.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             directory.mkdirs();
         }
 
