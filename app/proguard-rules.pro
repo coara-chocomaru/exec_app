@@ -25,9 +25,6 @@
 
 -classobfuscationdictionary obfuscation-dictionary.txt
 
--dontshrink
-
--dontoptimize
 
 
 -allowaccessmodification
