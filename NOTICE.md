@@ -6,7 +6,8 @@
 ## 基本的なライセンス情報
 
 このアプリはAndroid Software Development Kit (SDK) を使用して開発されています。  
-Android SDKはGoogle LLCによって提供されており、オープンソースのApache License 2.0のもとで利用可能です。
+Android SDKはGoogle LLCによって提供されており  
+オープンソースのApache License 2.0のもとで利用可能です。
 
 - **Apache License, Version 2.0**: Android SDKはApache License 2.0に基づいて提供されています。ライセンスの詳細については、以下のリンクをご覧ください:  
   [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
