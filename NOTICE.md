@@ -1,11 +1,12 @@
 # 使用ライブラリのライセンス
 - **androidx.core:coreライブラリ**: `androidx.core:core:1.0.0`
-- 詳細なライセンス情報は以下のリンクをご確認ください:  
-  [androidxライセンス情報](https://developer.android.com/jetpack/licenses)
+- 公式サイト: [androidx.core:core](https://developer.android.com/jetpack/androidx/releases/core?hl=ja)
+- ライセンス: Apache License, Version 2.0  
+- 著作権: © The Android Open Source Project
 
 ## 基本的なライセンス情報
-
-このアプリはAndroid Software Development Kit (SDK) を使用して開発されています。  
+このアプリ(com.coara.execapp)は                        
+Android Software Development Kit (SDK) を使用して開発されています。  
 Android SDKはGoogle LLCによって提供されており  
 オープンソースのApache License 2.0のもとで利用可能です。
 
